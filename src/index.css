@@ -1,0 +1,194 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Manrope:wght@400;500;600;700;800;900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --flour: #ff8a1f;
+  --canvas: #f6f2eb;
+  --canvas-2: #efeae1;
+  --surface: rgba(255, 252, 247, 0.9);
+  --surface-soft: rgba(255, 255, 255, 0.62);
+  --surface-raised: rgba(255, 255, 255, 0.78);
+  --text: #26303d;
+  --text-strong: #101723;
+  --muted: #647083;
+  --line: rgba(111, 93, 74, 0.16);
+  --track: rgba(15, 23, 42, 0.08);
+  --chart-grid: rgba(100, 112, 131, 0.14);
+  --hero-a: rgba(255, 252, 247, 0.92);
+  --hero-b: rgba(255, 242, 225, 0.72);
+  color: var(--text);
+  background-color: var(--canvas);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root.dark {
+  --canvas: #0d1118;
+  --canvas-2: #151a24;
+  --surface: rgba(18, 24, 34, 0.9);
+  --surface-soft: rgba(27, 35, 49, 0.66);
+  --surface-raised: rgba(36, 45, 61, 0.72);
+  --text: #d6dde8;
+  --text-strong: #f8fafc;
+  --muted: #98a5b8;
+  --line: rgba(226, 232, 240, 0.12);
+  --track: rgba(226, 232, 240, 0.1);
+  --chart-grid: rgba(226, 232, 240, 0.1);
+  --hero-a: rgba(24, 31, 44, 0.92);
+  --hero-b: rgba(15, 20, 30, 0.78);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--canvas);
+  color: var(--text);
+}
+
+* {
+  border-color: var(--line);
+}
+
+::selection {
+  background: rgba(255, 138, 31, 0.26);
+  color: var(--text-strong);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+@layer base {
+  body {
+    @apply font-sans;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    @apply text-balance;
+  }
+
+  p {
+    @apply text-pretty;
+  }
+}
+
+@layer components {
+  .premium-surface {
+    position: relative;
+    overflow: hidden;
+    border-radius: 28px;
+    border: 1px solid var(--line);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.22), transparent 34%),
+      var(--surface);
+    box-shadow:
+      0 24px 78px -42px rgba(15, 23, 42, 0.42),
+      inset 0 1px 0 rgba(255, 255, 255, 0.42);
+    backdrop-filter: blur(24px);
+  }
+
+  :root.dark .premium-surface {
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 38%),
+      var(--surface);
+    box-shadow:
+      0 28px 90px -48px rgba(0, 0, 0, 0.72),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .premium-surface::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset-inline: 28px;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.82), transparent);
+    opacity: 0.75;
+  }
+
+  :root.dark .premium-surface::before {
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.16), transparent);
+  }
+
+  .premium-hero {
+    isolation: isolate;
+  }
+
+  .chart-card {
+    min-height: 390px;
+    transition:
+      box-shadow 260ms ease,
+      border-color 260ms ease,
+      background-color 260ms ease;
+  }
+
+  .chart-card:hover {
+    border-color: rgba(255, 138, 31, 0.34);
+    box-shadow:
+      0 34px 90px -48px rgba(255, 138, 31, 0.45),
+      0 24px 78px -42px rgba(15, 23, 42, 0.38),
+      inset 0 1px 0 rgba(255, 255, 255, 0.46);
+  }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .eyebrow {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
