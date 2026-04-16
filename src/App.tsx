@@ -3,13 +3,11 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   BadgeCheck,
   Boxes,
-  CalendarClock,
   CheckCircle2,
   ChevronRight,
-  CircleDollarSign,
   ClipboardCheck,
+  DoorOpen,
   Flame,
-  Gauge,
   Home,
   KeyRound,
   Layers3,
@@ -60,7 +58,7 @@ import {
 } from "./data/move-plan";
 
 type Theme = "light" | "dark";
-type TabId = "overview" | "budget" | "timeline" | "logistics";
+type TabId = "current" | "new";
 type ChartKind =
   | "area"
   | "line"
@@ -102,25 +100,15 @@ const currentTimelineDay = 5;
 const slotToDay = (slot: number) => Math.round((slot / 8) * timelineTotalDays);
 
 const tabMeta: Record<TabId, { label: string; icon: LucideIcon; summary: string }> = {
-  overview: {
-    label: "Overview",
-    icon: Gauge,
-    summary: "The full move as a time sequence: checkpoints, handoffs, buffers and unlocks.",
+  current: {
+    label: "Current apartment",
+    icon: DoorOpen,
+    summary: "Close the current contract, pack everything cleanly, and paint the apartment before handoff.",
   },
-  budget: {
-    label: "Budget & Cost",
-    icon: CircleDollarSign,
-    summary: "Payment timing, cash gates, overlap scenarios and deadline-driven budget steps.",
-  },
-  timeline: {
-    label: "Timeline & Readiness",
-    icon: Route,
-    summary: "Gantt lanes, dependency gates, blocker sequence, buffers and readiness checkpoints.",
-  },
-  logistics: {
-    label: "Logistics & Execution",
-    icon: Truck,
-    summary: "Packing sprints, vendor slots, utility activations, inventory flow and move-day steps.",
+  new: {
+    label: "New apartment",
+    icon: Home,
+    summary: "Sign the new contract, move, clean the new place, and organize the first livable setup.",
   },
 };
 
@@ -176,17 +164,17 @@ const heatmapDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].flatMap((d
 );
 
 const missionBadges = [
-  { title: "Contract Locked", level: "Level 2", progress: 76, icon: KeyRound },
+  { title: "Exit Contract", level: "Current apt", progress: 58, icon: ClipboardCheck },
   { title: "Packing Streak", level: "6 days", progress: 64, icon: Flame },
-  { title: "Budget Guardian", level: "A-", progress: 82, icon: ShieldAlert },
-  { title: "Move-In Ready", level: "Level 4", progress: overallProgress, icon: Trophy },
+  { title: "Arrival Access", level: "New apt", progress: 64, icon: KeyRound },
+  { title: "Move-In Ready", level: "Day 45", progress: overallProgress, icon: Trophy },
 ];
 
 const challenges = [
-  { task: "Confirm painting quote", reward: "+120 pts", done: true },
-  { task: "Schedule mover shortlist", reward: "+160 pts", done: true },
-  { task: "Utilities transfer window", reward: "+180 pts", done: false },
-  { task: "Pack kitchen fragile set", reward: "+140 pts", done: false },
+  { task: "Close current contract terms", reward: "+120 pts", done: true },
+  { task: "Pack high-risk room first", reward: "+160 pts", done: true },
+  { task: "Sign new apartment contract", reward: "+180 pts", done: false },
+  { task: "Plan clean + organize window", reward: "+140 pts", done: false },
 ];
 
 const phaseCoordinates = movePhases.map((phase) => ({
@@ -199,29 +187,17 @@ const phaseCoordinates = movePhases.map((phase) => ({
 }));
 
 const sequenceByTab: Record<TabId, Array<{ label: string; week: string; progress: number; icon: LucideIcon }>> = {
-  overview: [
-    { label: "Decide", week: "Day 1-7", progress: 84, icon: Sparkles },
-    { label: "Keys", week: "Day 8-14", progress: 64, icon: KeyRound },
-    { label: "Prep", week: "Day 15-30", progress: 42, icon: PaintRoller },
-    { label: "Move", week: "Day 31-45", progress: 18, icon: Truck },
+  current: [
+    { label: "Close contract", week: "Day 1-12", progress: 58, icon: ClipboardCheck },
+    { label: "Pack", week: "Day 8-30", progress: 46, icon: PackageCheck },
+    { label: "Paint", week: "Day 18-34", progress: 24, icon: PaintRoller },
+    { label: "Handoff", week: "Day 35-45", progress: 12, icon: DoorOpen },
   ],
-  budget: [
-    { label: "Reserve", week: "Day 1-5", progress: 100, icon: BadgeCheck },
-    { label: "Deposit", week: "Day 6-12", progress: 72, icon: Wallet2 },
-    { label: "Vendors", week: "Day 18-28", progress: 44, icon: ClipboardCheck },
-    { label: "Closeout", week: "Day 36-45", progress: 18, icon: CheckCircle2 },
-  ],
-  timeline: [
-    { label: "Contract", week: "Day 1-7", progress: 78, icon: ClipboardCheck },
-    { label: "Access", week: "Day 8-14", progress: 61, icon: KeyRound },
-    { label: "Packing", week: "Day 22-35", progress: 48, icon: PackageCheck },
-    { label: "Handoff", week: "Day 38-45", progress: 16, icon: Home },
-  ],
-  logistics: [
-    { label: "Sort", week: "Day 8-16", progress: 72, icon: Boxes },
-    { label: "Pack", week: "Day 17-32", progress: 58, icon: PackageCheck },
-    { label: "Activate", week: "Day 28-38", progress: 44, icon: Zap },
-    { label: "Move day", week: "Day 39-45", progress: 20, icon: Truck },
+  new: [
+    { label: "Sign contract", week: "Day 1-10", progress: 64, icon: KeyRound },
+    { label: "Move", week: "Day 28-38", progress: 20, icon: Truck },
+    { label: "Clean", week: "Day 32-42", progress: 18, icon: Sparkles },
+    { label: "Organize", week: "Day 36-45", progress: 14, icon: Home },
   ],
 };
 
@@ -717,104 +693,93 @@ const logisticsVisuals: VisualSpec[] = [
   },
 ];
 
+const allVisuals = [
+  ...overviewVisuals,
+  ...budgetVisuals,
+  ...timelineVisuals,
+  ...logisticsVisuals,
+];
+
+const visualById = new Map(allVisuals.map((visual) => [visual.id, visual]));
+
+const getVisuals = (ids: string[]) =>
+  ids.flatMap((id) => {
+    const visual = visualById.get(id);
+    return visual ? [visual] : [];
+  });
+
 const visualsByTab: Record<TabId, VisualSpec[]> = {
-  overview: overviewVisuals,
-  budget: budgetVisuals,
-  timeline: timelineVisuals,
-  logistics: logisticsVisuals,
+  current: getVisuals([
+    "risk-schedule",
+    "phase-state",
+    "blocker-lanes",
+    "task-aging",
+    "completion-heatmap",
+    "packing-progress",
+    "inventory-flow",
+    "fragile-heatmap",
+    "load-by-room",
+    "phase-duration",
+  ]),
+  new: getVisuals([
+    "critical-handoff",
+    "dependency-gates",
+    "immersive-gantt",
+    "readiness-trend",
+    "cost-deadlines",
+    "payment-timeline",
+    "vendor-score",
+    "utility-activation",
+    "truck-booking",
+    "setup-readiness",
+  ]),
 };
 
 const chartCategoriesByTab: Record<TabId, ChartCategory[]> = {
-  overview: [
+  current: [
     {
-      id: "overview-health",
-      eyebrow: "Master sequence",
-      title: "The full move as a runway",
-      description: "A timeline-first overview of readiness, day-marker load and phase state.",
-      visualIds: ["move-health", "mission-score", "momentum-line", "phase-state"],
+      id: "current-contract",
+      eyebrow: "Current apartment",
+      title: "Close the current contract",
+      description: "Track the exit paperwork, notice windows, blockers and task aging before handoff.",
+      visualIds: ["risk-schedule", "phase-state", "blocker-lanes", "task-aging"],
     },
     {
-      id: "overview-risk",
-      eyebrow: "Handoffs",
-      title: "Dependencies by when they matter",
-      description: "Risk is organized by timing, handoffs and work windows instead of generic categories.",
-      visualIds: ["critical-handoff", "weekly-focus", "risk-schedule", "completion-heatmap"],
-    },
-    {
-      id: "overview-rewards",
-      eyebrow: "Unlock path",
-      title: "Progress that unlocks the next step",
-      description: "Gamified moments now sit on the timeline as useful sequence markers.",
-      visualIds: ["achievement-rail", "challenge-board"],
-    },
-  ],
-  budget: [
-    {
-      id: "budget-control",
-      eyebrow: "Cash timeline",
-      title: "Money by due date",
-      description: "Budget views are arranged as a payment runway with day-based cash gates.",
-      visualIds: ["budget-burn", "cost-deadlines", "cash-buffer", "budget-checkpoints"],
-    },
-    {
-      id: "budget-scenarios",
-      eyebrow: "Scenario steps",
-      title: "Tradeoffs as timeline decisions",
-      description: "Overlap, hidden costs and deposit recovery are shown as timed decision paths.",
-      visualIds: ["hidden-costs", "overlap-weeks", "deposit-recovery"],
-    },
-    {
-      id: "budget-operations",
-      eyebrow: "Payment operations",
-      title: "Quotes, utilities and cash events in order",
-      description: "Every money action is connected to a calendar moment and a next step.",
-      visualIds: ["utility-map", "quote-comparison", "payment-timeline"],
-    },
-  ],
-  timeline: [
-    {
-      id: "timeline-roadmap",
-      eyebrow: "Roadmap",
-      title: "Schedule structure and critical path",
-      description: "Gantt, duration and buffer views that make the move sequence tangible.",
-      visualIds: ["immersive-gantt", "phase-duration", "buffer-burn"],
-    },
-    {
-      id: "timeline-readiness",
-      eyebrow: "Readiness",
-      title: "Preparedness and task maturity",
-      description: "How readiness improves, where tasks are aging, and which windows need protection.",
-      visualIds: ["readiness-trend", "task-aging", "milestone-heatmap"],
-    },
-    {
-      id: "timeline-dependencies",
-      eyebrow: "Dependencies",
-      title: "Blockers, unlocks and execution gates",
-      description: "Dependency views that connect blockers, milestone unlocks and critical path checkpoints.",
-      visualIds: ["dependency-gates", "blocker-lanes", "unlock-pipeline", "critical-checkpoints"],
-    },
-  ],
-  logistics: [
-    {
-      id: "logistics-packing",
-      eyebrow: "Packing & inventory",
-      title: "Room-level sprint sequence",
-      description: "Packing is organized by timed room sprints, item flow and care windows.",
+      id: "current-pack",
+      eyebrow: "Packing runway",
+      title: "Pack without losing the timeline",
+      description: "Room-by-room packing, item flow and fragile care windows for the place you are leaving.",
       visualIds: ["packing-progress", "inventory-flow", "fragile-heatmap", "load-by-room"],
     },
     {
-      id: "logistics-services",
-      eyebrow: "Vendors & utilities",
-      title: "External commitments",
-      description: "Vendor confidence, booking risk and service activation before move day.",
-      visualIds: ["vendor-score", "utility-activation", "truck-booking"],
+      id: "current-paint",
+      eyebrow: "Paint and handoff",
+      title: "Paint the apartment and prepare return",
+      description: "Paint duration, workload windows and the final handoff pressure before Day 45.",
+      visualIds: ["phase-duration", "completion-heatmap"],
+    },
+  ],
+  new: [
+    {
+      id: "new-contract",
+      eyebrow: "New apartment",
+      title: "Sign the new contract",
+      description: "Show the access gates, payment moments and dependencies that unlock the new place.",
+      visualIds: ["critical-handoff", "dependency-gates", "cost-deadlines", "payment-timeline"],
     },
     {
-      id: "logistics-readiness",
-      eyebrow: "Execution readiness",
-      title: "First-night and declutter pipeline",
-      description: "The operational charts that make the final transition smoother and less cluttered.",
-      visualIds: ["donation-pipeline", "setup-readiness", "execution-checkpoints"],
+      id: "new-move",
+      eyebrow: "Move sequence",
+      title: "Move into the new apartment",
+      description: "Gantt lanes, mover booking confidence and service activation across the 45-day timeline.",
+      visualIds: ["immersive-gantt", "readiness-trend", "vendor-score", "truck-booking"],
+    },
+    {
+      id: "new-clean-organize",
+      eyebrow: "Clean and organize",
+      title: "Make the new place livable",
+      description: "Utilities, cleaning/setup readiness and first-night organization after the move lands.",
+      visualIds: ["utility-activation", "setup-readiness"],
     },
   ],
 };
@@ -823,7 +788,7 @@ const tabOrder = Object.keys(tabMeta) as TabId[];
 
 function App() {
   const [theme, setTheme] = useState<Theme>("light");
-  const [activeTab, setActiveTab] = useState<TabId>("overview");
+  const [activeTab, setActiveTab] = useState<TabId>("current");
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -914,12 +879,12 @@ function PremiumHero({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: ()
           </div>
 
           <h1 className="mt-7 max-w-5xl text-5xl font-black leading-[0.94] tracking-[-0.04em] text-[color:var(--text-strong)] sm:text-6xl lg:text-7xl xl:text-8xl">
-            Land the move like a calm, cinematic mission.
+            Two missions, one calm 45-day move.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-[color:var(--muted)] sm:text-xl">
-            A premium command center for turning contracts, packing, budget pressure and move-day logistics into one
-            confident sequence. Every phase earns momentum, every blocker gets surfaced, and the path to move-in feels
-            visible before it feels urgent.
+            Split the work into the two realities that matter: get out of the current apartment cleanly, then get into
+            the new apartment with momentum. Close the old contract, pack, paint, sign the new contract, move, clean and
+            organize without letting either side of the transition blur into the other.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -940,9 +905,9 @@ function PremiumHero({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: ()
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <HeroSignal label="Move health" value="73/100" detail="stable with rising momentum" />
-          <HeroSignal label="Next unlock" value="Keys + access" detail={executiveSummary.nextMilestone} />
-          <HeroSignal label="Critical stack" value={`${criticalDependencies.length} dependencies`} detail="contract, access, notice" />
+          <HeroSignal label="Exit phase" value="Current apt" detail="contract, packing, paint" />
+          <HeroSignal label="Arrival phase" value="New apt" detail="sign, move, clean, organize" />
+          <HeroSignal label="Today" value="Day 5 / 45" detail={`${criticalDependencies.length} dependencies active`} />
         </div>
       </div>
 
@@ -1057,12 +1022,12 @@ function MissionStrip() {
       <Card className="premium-surface p-5 sm:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="eyebrow text-[color:var(--flour)]">Gamified mission progress</div>
+            <div className="eyebrow text-[color:var(--flour)]">Two-phase mission progress</div>
             <h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-[color:var(--text-strong)]">
-              Level 4: access runway unlocked
+              Day 5: exit and arrival tracks are now linked
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[color:var(--muted)]">
-              Points are awarded for decisions that reduce uncertainty: locking access, protecting budget, packing high-risk rooms and clearing dependencies.
+              The current apartment track closes obligations; the new apartment track unlocks livability. Progress only counts when it reduces friction on one of those two paths.
             </p>
           </div>
           <div className="min-w-[260px]">
@@ -1127,10 +1092,8 @@ function DashboardTab({ tab }: { tab: TabId }) {
               <div>
                 <div className="eyebrow text-[color:var(--flour)]">{tabMeta[tab].label}</div>
                 <h2 className="mt-1 text-3xl font-black tracking-[-0.04em] text-[color:var(--text-strong)]">
-                  {tab === "overview" && "Your move, arranged as a cinematic sequence."}
-                  {tab === "budget" && "Every payment tied to a calendar gate."}
-                  {tab === "timeline" && "Every dependency has a visible lane."}
-                  {tab === "logistics" && "Execution becomes a sequence of calm handoffs."}
+                  {tab === "current" && "Exit the current apartment with no loose ends."}
+                  {tab === "new" && "Enter the new apartment ready to live well."}
                 </h2>
               </div>
             </div>
@@ -1138,12 +1101,12 @@ function DashboardTab({ tab }: { tab: TabId }) {
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               <MiniKpi label="Charts" value="10+" icon={Layers3} />
               <MiniKpi label="Motion" value="Live" icon={Zap} />
-              <MiniKpi label="Focus" value={tab === "budget" ? "$5.3M" : tab === "timeline" ? "8 phases" : tab === "logistics" ? "5 rooms" : "73/100"} icon={Target} />
+              <MiniKpi label="Focus" value={tab === "current" ? "3 exits" : "4 arrivals"} icon={Target} />
             </div>
           </div>
         </Card>
 
-        {tab === "timeline" ? <RoadmapGantt /> : <SequencePanel tab={tab} />}
+        <SequencePanel tab={tab} />
       </AnimatedSection>
 
       <div className="flex flex-col gap-8">
@@ -1201,25 +1164,15 @@ function ChartCategorySection({
 
 function SequencePanel({ tab }: { tab: TabId }) {
   const panelCopy: Record<TabId, { eyebrow: string; title: string; icon: LucideIcon }> = {
-    overview: {
-      eyebrow: "Sequence map",
-      title: "The move reads left to right: decide, unlock access, prep the apartment, move in.",
-      icon: Route,
+    current: {
+      eyebrow: "Exit map",
+      title: "Close current contract, pack, paint, then hand the apartment back cleanly.",
+      icon: DoorOpen,
     },
-    budget: {
-      eyebrow: "Payment map",
-      title: "Cash decisions are anchored to when they unblock the next move step.",
-      icon: Wallet2,
-    },
-    timeline: {
-      eyebrow: "Timeline map",
-      title: "Every phase has a lane, a start, a duration and a next dependency.",
-      icon: CalendarClock,
-    },
-    logistics: {
-      eyebrow: "Execution map",
-      title: "Packing, utilities, vendors and move day progress as one operational relay.",
-      icon: Boxes,
+    new: {
+      eyebrow: "Arrival map",
+      title: "Sign the new contract, move, clean, then organize the first livable setup.",
+      icon: Home,
     },
   };
   const copy = panelCopy[tab];
