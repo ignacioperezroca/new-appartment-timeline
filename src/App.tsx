@@ -99,6 +99,14 @@ type VisualSpec = {
   metric?: string;
 };
 
+type ChartCategory = {
+  id: string;
+  title: string;
+  eyebrow: string;
+  description: string;
+  visualIds: string[];
+};
+
 const flour = "#ff8a1f";
 const amber = "#ffb155";
 const mint = "#49c7a2";
@@ -694,6 +702,101 @@ const visualsByTab: Record<TabId, VisualSpec[]> = {
   logistics: logisticsVisuals,
 };
 
+const chartCategoriesByTab: Record<TabId, ChartCategory[]> = {
+  overview: [
+    {
+      id: "overview-health",
+      eyebrow: "Health & momentum",
+      title: "Move health system",
+      description: "The high-level pulse: readiness, mission score, velocity and phase state.",
+      visualIds: ["move-health", "mission-score", "momentum-line", "phase-state"],
+    },
+    {
+      id: "overview-risk",
+      eyebrow: "Risk & attention",
+      title: "Where focus should go next",
+      description: "Signals that show pressure points, energy load and the best windows for focused progress.",
+      visualIds: ["critical-radar", "weekly-focus", "risk-donut", "completion-heatmap"],
+    },
+    {
+      id: "overview-rewards",
+      eyebrow: "Gamified journey",
+      title: "Progress that feels earned",
+      description: "Badges and challenges that reward real move-risk reduction, not empty activity.",
+      visualIds: ["achievement-rail", "challenge-board"],
+    },
+  ],
+  budget: [
+    {
+      id: "budget-control",
+      eyebrow: "Spend control",
+      title: "Burn, allocation and guardrails",
+      description: "Core financial health for the move: cash curve, category mix, buffer and control scores.",
+      visualIds: ["budget-burn", "category-donut", "cash-buffer", "budget-scorecards"],
+    },
+    {
+      id: "budget-scenarios",
+      eyebrow: "Scenario planning",
+      title: "Sensitivity and decision tradeoffs",
+      description: "The charts that explain what changes when overlap, hidden costs or deposit recovery shift.",
+      visualIds: ["hidden-costs", "overlap-weeks", "deposit-recovery"],
+    },
+    {
+      id: "budget-operations",
+      eyebrow: "Payment operations",
+      title: "Quotes, utilities and cash events",
+      description: "Operational money moments that need decisions before they become stress.",
+      visualIds: ["utility-map", "quote-comparison", "payment-timeline"],
+    },
+  ],
+  timeline: [
+    {
+      id: "timeline-roadmap",
+      eyebrow: "Roadmap",
+      title: "Schedule structure and critical path",
+      description: "Gantt, duration and buffer views that make the move sequence tangible.",
+      visualIds: ["immersive-gantt", "phase-duration", "buffer-burn"],
+    },
+    {
+      id: "timeline-readiness",
+      eyebrow: "Readiness",
+      title: "Preparedness and task maturity",
+      description: "How readiness improves, where tasks are aging, and which windows need protection.",
+      visualIds: ["readiness-trend", "task-aging", "milestone-heatmap"],
+    },
+    {
+      id: "timeline-dependencies",
+      eyebrow: "Dependencies",
+      title: "Blockers, unlocks and execution gates",
+      description: "Dependency views that connect blockers, milestone unlocks and critical path scorecards.",
+      visualIds: ["dependency-radar", "blocker-donut", "unlock-pipeline", "critical-scorecards"],
+    },
+  ],
+  logistics: [
+    {
+      id: "logistics-packing",
+      eyebrow: "Packing & inventory",
+      title: "Room-level execution",
+      description: "Everything related to boxes, fragile items, room load and inventory state.",
+      visualIds: ["packing-progress", "inventory-donut", "fragile-heatmap", "load-by-room"],
+    },
+    {
+      id: "logistics-services",
+      eyebrow: "Vendors & utilities",
+      title: "External commitments",
+      description: "Vendor confidence, booking risk and service activation before move day.",
+      visualIds: ["vendor-score", "utility-activation", "truck-booking"],
+    },
+    {
+      id: "logistics-readiness",
+      eyebrow: "Execution readiness",
+      title: "First-night and declutter pipeline",
+      description: "The operational charts that make the final transition smoother and less cluttered.",
+      visualIds: ["donation-pipeline", "setup-readiness", "execution-scorecards"],
+    },
+  ],
+};
+
 const tabOrder = Object.keys(tabMeta) as TabId[];
 
 function App() {
@@ -979,6 +1082,7 @@ function MissionStrip() {
 
 function DashboardTab({ tab }: { tab: TabId }) {
   const visuals = visualsByTab[tab];
+  const visualMap = new Map(visuals.map((visual) => [visual.id, visual]));
   const Icon = tabMeta[tab].icon;
 
   return (
@@ -1020,12 +1124,56 @@ function DashboardTab({ tab }: { tab: TabId }) {
         {tab === "timeline" ? <RoadmapGantt /> : <FeaturePanel tab={tab} />}
       </AnimatedSection>
 
-      <AnimatedSection className="dashboard-grid">
-        {visuals.map((visual, index) => (
-          <VisualizationCard key={visual.id} visual={visual} index={index} />
+      <div className="flex flex-col gap-8">
+        {chartCategoriesByTab[tab].map((category, categoryIndex) => (
+          <ChartCategorySection
+            key={category.id}
+            category={category}
+            categoryIndex={categoryIndex}
+            visuals={category.visualIds.flatMap((visualId) => {
+              const visual = visualMap.get(visualId);
+              return visual ? [visual] : [];
+            })}
+          />
         ))}
-      </AnimatedSection>
+      </div>
     </motion.div>
+  );
+}
+
+function ChartCategorySection({
+  category,
+  categoryIndex,
+  visuals,
+}: {
+  category: ChartCategory;
+  categoryIndex: number;
+  visuals: VisualSpec[];
+}) {
+  return (
+    <AnimatedSection className="chart-category">
+      <div className="category-heading">
+        <div>
+          <div className="eyebrow text-[color:var(--flour)]">{category.eyebrow}</div>
+          <h3 className="mt-2 text-2xl font-black tracking-[-0.04em] text-[color:var(--text-strong)] sm:text-3xl">
+            {category.title}
+          </h3>
+        </div>
+        <p className="max-w-2xl text-sm font-semibold leading-6 text-[color:var(--muted)] sm:text-base">
+          {category.description}
+        </p>
+      </div>
+
+      <div className="dashboard-grid mt-4">
+        {visuals.map((visual, index) => (
+          <VisualizationCard
+            key={visual.id}
+            visual={visual}
+            index={categoryIndex * 4 + index}
+          />
+        ))}
+      </div>
+    </AnimatedSection>
   );
 }
 
