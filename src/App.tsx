@@ -1,7 +1,6 @@
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
-  Award,
   BadgeCheck,
   Boxes,
   CalendarClock,
@@ -9,7 +8,6 @@ import {
   ChevronRight,
   CircleDollarSign,
   ClipboardCheck,
-  Clock3,
   Flame,
   Gauge,
   Home,
@@ -23,7 +21,6 @@ import {
   Sparkles,
   Sun,
   Target,
-  TimerReset,
   Truck,
   Trophy,
   Wallet2,
@@ -35,21 +32,11 @@ import {
   AreaChart,
   Bar,
   BarChart,
-  CartesianGrid,
   Cell,
-  ComposedChart,
+  CartesianGrid,
   Legend,
   Line,
   LineChart,
-  Pie,
-  PieChart,
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-  RadialBar,
-  RadialBarChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -79,13 +66,9 @@ type ChartKind =
   | "line"
   | "bar"
   | "stacked"
-  | "donut"
-  | "radar"
-  | "radial"
   | "heatmap"
   | "waterfall"
   | "timeline"
-  | "scorecards"
   | "pipeline";
 
 type VisualSpec = {
@@ -119,22 +102,22 @@ const tabMeta: Record<TabId, { label: string; icon: LucideIcon; summary: string 
   overview: {
     label: "Overview",
     icon: Gauge,
-    summary: "Move health, mission score, readiness, risk and momentum in one command layer.",
+    summary: "The full move as a time sequence: checkpoints, handoffs, buffers and unlocks.",
   },
   budget: {
     label: "Budget & Cost",
     icon: CircleDollarSign,
-    summary: "Burn, overlap, deposits, hidden costs, sensitivity and scenario control.",
+    summary: "Payment timing, cash gates, overlap scenarios and deadline-driven budget steps.",
   },
   timeline: {
     label: "Timeline & Readiness",
     icon: Route,
-    summary: "Gantt, dependencies, blockers, buffers, task aging and critical path clarity.",
+    summary: "Gantt lanes, dependency gates, blocker sequence, buffers and readiness checkpoints.",
   },
   logistics: {
     label: "Logistics & Execution",
     icon: Truck,
-    summary: "Packing, vendors, utilities, inventory, room readiness and day-of execution.",
+    summary: "Packing sprints, vendor slots, utility activations, inventory flow and move-day steps.",
   },
 };
 
@@ -212,12 +195,39 @@ const phaseCoordinates = movePhases.map((phase) => ({
   status: phase.status,
 }));
 
+const sequenceByTab: Record<TabId, Array<{ label: string; week: string; progress: number; icon: LucideIcon }>> = {
+  overview: [
+    { label: "Decide", week: "Apr W3", progress: 84, icon: Sparkles },
+    { label: "Keys", week: "May W1", progress: 64, icon: KeyRound },
+    { label: "Prep", week: "May W3", progress: 42, icon: PaintRoller },
+    { label: "Move", week: "Jun W1", progress: 18, icon: Truck },
+  ],
+  budget: [
+    { label: "Reserve", week: "Apr W4", progress: 100, icon: BadgeCheck },
+    { label: "Deposit", week: "May W1", progress: 72, icon: Wallet2 },
+    { label: "Vendors", week: "May W3", progress: 44, icon: ClipboardCheck },
+    { label: "Closeout", week: "Jun W2", progress: 18, icon: CheckCircle2 },
+  ],
+  timeline: [
+    { label: "Contract", week: "Apr W4", progress: 78, icon: ClipboardCheck },
+    { label: "Access", week: "May W1", progress: 61, icon: KeyRound },
+    { label: "Packing", week: "May W4", progress: 48, icon: PackageCheck },
+    { label: "Handoff", week: "Jun W2", progress: 16, icon: Home },
+  ],
+  logistics: [
+    { label: "Sort", week: "May W1", progress: 72, icon: Boxes },
+    { label: "Pack", week: "May W3", progress: 58, icon: PackageCheck },
+    { label: "Activate", week: "May W4", progress: 44, icon: Zap },
+    { label: "Move day", week: "Jun W1", progress: 20, icon: Truck },
+  ],
+};
+
 const overviewVisuals: VisualSpec[] = [
   {
     id: "move-health",
-    title: "Move health trajectory",
-    eyebrow: "Readiness vs risk",
-    detail: "A narrative pulse of readiness rising while execution risk compresses.",
+    title: "Master move runway",
+    eyebrow: "Apr to Jun sequence",
+    detail: "The main readiness line shows how each week pulls the move closer to handoff.",
     kind: "area",
     size: "wide",
     data: readinessTrend,
@@ -225,73 +235,78 @@ const overviewVisuals: VisualSpec[] = [
   },
   {
     id: "mission-score",
-    title: "Mission score ring",
-    eyebrow: "Road to move-in",
-    detail: "The overall progress ring turns the plan into a visible finish line.",
-    kind: "radial",
-    data: [{ name: "Mission", value: overallProgress, fill: flour }],
+    title: "Checkpoint ladder",
+    eyebrow: "Mission sequence",
+    detail: "Progress is framed as ordered gates: decide, lock access, prep, move and close.",
+    kind: "pipeline",
+    data: [
+      { name: "Decision", value: 84 },
+      { name: "Access", value: 64 },
+      { name: "Prep", value: 42 },
+      { name: "Move", value: 18 },
+    ],
     metric: `${overallProgress}%`,
   },
   {
-    id: "critical-radar",
-    title: "Move control radar",
-    eyebrow: "Operational balance",
-    detail: "A health-dashboard view across cost, time, dependencies and confidence.",
-    kind: "radar",
+    id: "critical-handoff",
+    title: "Critical handoff lanes",
+    eyebrow: "Dependency order",
+    detail: "Every handoff is shown as a lane so timing dependencies stay visible.",
+    kind: "timeline",
+    size: "wide",
     data: [
-      { axis: "Cost", score: 74 },
-      { axis: "Time", score: 68 },
-      { axis: "Packing", score: 54 },
-      { axis: "Access", score: 82 },
-      { axis: "Risk", score: 61 },
-      { axis: "Energy", score: 77 },
+      { name: "Decision", start: 0, duration: 2, progress: 84 },
+      { name: "Keys", start: 2, duration: 2, progress: 64 },
+      { name: "Notice", start: 3, duration: 2, progress: 38 },
+      { name: "Paint", start: 4, duration: 3, progress: 24 },
+      { name: "Move day", start: 6, duration: 2, progress: 12 },
     ],
-    metric: "73",
+    metric: "5 gates",
   },
   {
     id: "weekly-focus",
-    title: "Weekly focus load",
-    eyebrow: "Narrative rhythm",
-    detail: "Shows when the move asks for the most attention and decisions.",
+    title: "Weekly step load",
+    eyebrow: "Work by week",
+    detail: "Each bar is a week in the sequence, showing where the plan gets operationally dense.",
     kind: "bar",
     data: weeks.map((week, index) => ({ week, value: [28, 46, 62, 74, 83, 77, 58, 44, 31][index] })),
   },
   {
     id: "achievement-rail",
-    title: "Achievement rail",
-    eyebrow: "Badges unlocked",
-    detail: "Useful rewards for behaviors that actually reduce moving friction.",
-    kind: "scorecards",
+    title: "Achievement unlock path",
+    eyebrow: "Gamified checkpoints",
+    detail: "Badges become sequence markers attached to the next real-world milestone.",
+    kind: "pipeline",
     size: "wide",
     data: missionBadges.map((badge) => ({ name: badge.title, value: badge.progress })),
   },
   {
-    id: "risk-donut",
-    title: "Risk concentration",
-    eyebrow: "Attention split",
-    detail: "Contract and logistics dominate the current risk profile.",
-    kind: "donut",
+    id: "risk-schedule",
+    title: "Risk handoff schedule",
+    eyebrow: "When risk moves",
+    detail: "Risk is organized by when it can interrupt the sequence, not by abstract category.",
+    kind: "timeline",
     data: [
-      { name: "Contract", value: 32, color: flour },
-      { name: "Logistics", value: 27, color: blue },
-      { name: "Budget", value: 21, color: rose },
-      { name: "Setup", value: 20, color: mint },
+      { name: "Contract", start: 0, duration: 2, progress: 68 },
+      { name: "Access", start: 2, duration: 2, progress: 52 },
+      { name: "Logistics", start: 4, duration: 3, progress: 38 },
+      { name: "Closeout", start: 7, duration: 2, progress: 18 },
     ],
   },
   {
     id: "momentum-line",
-    title: "Momentum index",
-    eyebrow: "Plan velocity",
-    detail: "A compact read on whether progress is accelerating quickly enough.",
+    title: "Momentum staircase",
+    eyebrow: "Step velocity",
+    detail: "Momentum rises only when the next gate opens, making progress feel sequential.",
     kind: "line",
     data: readinessTrend,
     metric: "+23",
   },
   {
     id: "phase-state",
-    title: "Phase state stack",
-    eyebrow: "Current mix",
-    detail: "How the eight phases distribute across ready, moving and blocked states.",
+    title: "Phase state by checkpoint",
+    eyebrow: "Now / next / move-in",
+    detail: "Shows how planned, blocked, moving and ready work changes across the move sequence.",
     kind: "stacked",
     data: [
       { week: "Now", ready: 2, moving: 1, blocked: 1, planned: 4 },
@@ -301,17 +316,17 @@ const overviewVisuals: VisualSpec[] = [
   },
   {
     id: "completion-heatmap",
-    title: "Completion heatmap",
-    eyebrow: "Best work windows",
-    detail: "Highlights the windows where small tasks can unlock big progress.",
+    title: "Weekly action heatmap",
+    eyebrow: "Work windows",
+    detail: "A calendar-like map of the time windows where small steps unlock the next phase.",
     kind: "heatmap",
     data: heatmapDays,
   },
   {
     id: "challenge-board",
-    title: "Challenge board",
-    eyebrow: "Micro rewards",
-    detail: "Four near-term actions that raise confidence without adding noise.",
+    title: "Next-step challenge lane",
+    eyebrow: "Micro sequence",
+    detail: "Challenges are now ordered by what they unlock in the move timeline.",
     kind: "pipeline",
     size: "wide",
     data: challenges.map((challenge, index) => ({
@@ -324,42 +339,47 @@ const overviewVisuals: VisualSpec[] = [
 const budgetVisuals: VisualSpec[] = [
   {
     id: "budget-burn",
-    title: "Budget burn curve",
-    eyebrow: "Expected vs actual",
-    detail: "Tracks whether the cash curve is staying inside the move envelope.",
+    title: "Cash runway over time",
+    eyebrow: "Weekly spend sequence",
+    detail: "Spend is plotted by week so the budget reads like a cash timeline.",
     kind: "area",
     size: "wide",
     data: budgetBurn,
     metric: "$5.21M",
   },
   {
-    id: "category-donut",
-    title: "Category allocation",
-    eyebrow: "Cost mix",
-    detail: "Deposit and overlap are the big levers; buffer protects the finish.",
-    kind: "donut",
-    data: costCategories.map((item) => ({ name: item.name, value: item.value, color: item.color })),
+    id: "cost-deadlines",
+    title: "Cost category deadlines",
+    eyebrow: "Pay-by sequence",
+    detail: "Costs are sequenced by when they are due, making the money plan date-driven.",
+    kind: "timeline",
+    data: costCategories.map((item, index) => ({
+      name: item.name,
+      start: Math.min(index + 1, 8),
+      duration: index > 2 ? 2 : 1,
+      progress: Math.max(18, 92 - index * 12),
+    })),
   },
   {
     id: "hidden-costs",
-    title: "Hidden-cost radar",
-    eyebrow: "Sensitivity",
-    detail: "Surfaces the costs most likely to surprise the plan.",
-    kind: "radar",
+    title: "Hidden-cost watchlist",
+    eyebrow: "Reveal order",
+    detail: "Surprise costs are shown as a watchlist sequence across the move calendar.",
+    kind: "pipeline",
     data: [
-      { axis: "Fees", score: 48 },
-      { axis: "Repairs", score: 67 },
-      { axis: "Delivery", score: 58 },
-      { axis: "Utilities", score: 42 },
-      { axis: "Food", score: 38 },
-      { axis: "Buffer", score: 74 },
+      { name: "Fees", value: 48 },
+      { name: "Repairs", value: 67 },
+      { name: "Delivery", value: 58 },
+      { name: "Utilities", value: 42 },
+      { name: "Food", value: 38 },
+      { name: "Buffer", value: 74 },
     ],
   },
   {
     id: "overlap-weeks",
-    title: "Overlap cost ladder",
-    eyebrow: "Scenario",
-    detail: "Shows the cost of choosing calm overlap versus a compressed move.",
+    title: "Overlap week ladder",
+    eyebrow: "Scenario by duration",
+    detail: "The cost rises step by step as each extra overlap week is added.",
     kind: "waterfall",
     data: [
       { name: "Base", value: 4100 },
@@ -371,9 +391,9 @@ const budgetVisuals: VisualSpec[] = [
   },
   {
     id: "deposit-recovery",
-    title: "Deposit recovery probability",
-    eyebrow: "Confidence band",
-    detail: "A simple odds curve for how much cash returns after handoff.",
+    title: "Deposit return path",
+    eyebrow: "Closeout sequence",
+    detail: "Recovery confidence climbs as inspection, fixes and handoff steps complete.",
     kind: "line",
     data: weeks.map((week, index) => ({
       week,
@@ -384,9 +404,9 @@ const budgetVisuals: VisualSpec[] = [
   },
   {
     id: "utility-map",
-    title: "Utility transfer cost map",
-    eyebrow: "Activation",
-    detail: "Internet, power and admin costs by activation window.",
+    title: "Utility payment order",
+    eyebrow: "Activation steps",
+    detail: "Utility costs are staged in the same order they need to activate.",
     kind: "bar",
     data: [
       { week: "Internet", value: 88 },
@@ -398,17 +418,17 @@ const budgetVisuals: VisualSpec[] = [
   },
   {
     id: "cash-buffer",
-    title: "Cash buffer runway",
-    eyebrow: "Resilience",
-    detail: "How much financial cushion remains after each move milestone.",
+    title: "Buffer runway curve",
+    eyebrow: "Slack over weeks",
+    detail: "The buffer is tracked as time slack and cash slack through the sequence.",
     kind: "area",
     data: budgetBurn.map((point) => ({ week: point.week, readiness: point.buffer, risk: point.actual / 12 })),
   },
   {
     id: "quote-comparison",
-    title: "Vendor quote comparison",
-    eyebrow: "Mover bids",
-    detail: "Compares mover quotes with quality weighting and risk premiums.",
+    title: "Quote decision window",
+    eyebrow: "Vendor sequence",
+    detail: "Mover bids become deadline lanes: compare, negotiate, book and confirm.",
     kind: "stacked",
     data: [
       { week: "A", ready: 220, moving: 40, blocked: 18, planned: 30 },
@@ -432,11 +452,11 @@ const budgetVisuals: VisualSpec[] = [
     ],
   },
   {
-    id: "budget-scorecards",
-    title: "Financial control cards",
-    eyebrow: "Guardrails",
-    detail: "Budget health as a set of fast operational indicators.",
-    kind: "scorecards",
+    id: "budget-checkpoints",
+    title: "Budget checkpoint lane",
+    eyebrow: "Money gates",
+    detail: "Guardrails are now ordered checkpoints that must clear before move day.",
+    kind: "pipeline",
     data: [
       { name: "Buffer", value: 82 },
       { name: "Quotes", value: 68 },
@@ -459,32 +479,32 @@ const timelineVisuals: VisualSpec[] = [
   },
   {
     id: "readiness-trend",
-    title: "Weekly readiness trend",
-    eyebrow: "Preparedness",
-    detail: "Readiness improves fastest after access, painting and packing converge.",
+    title: "Readiness ramp",
+    eyebrow: "Week-by-week",
+    detail: "Preparedness is shown as a weekly ramp toward move-in.",
     kind: "line",
     data: readinessTrend,
   },
   {
-    id: "dependency-radar",
-    title: "Dependency radar",
-    eyebrow: "Blocker exposure",
-    detail: "Shows which dependency groups can still affect the date.",
-    kind: "radar",
+    id: "dependency-gates",
+    title: "Dependency gate sequence",
+    eyebrow: "Unlock order",
+    detail: "Dependencies are ordered by which gate they unlock next.",
+    kind: "pipeline",
     data: [
-      { axis: "Contract", score: 78 },
-      { axis: "Access", score: 72 },
-      { axis: "Notice", score: 61 },
-      { axis: "Paint", score: 58 },
-      { axis: "Movers", score: 52 },
-      { axis: "Utilities", score: 45 },
+      { name: "Contract", value: 78 },
+      { name: "Access", value: 72 },
+      { name: "Notice", value: 61 },
+      { name: "Paint", value: 58 },
+      { name: "Movers", value: 52 },
+      { name: "Utilities", value: 45 },
     ],
   },
   {
     id: "phase-duration",
-    title: "Phase duration bars",
-    eyebrow: "Load by block",
-    detail: "A compact read of where time is consumed.",
+    title: "Phase duration steps",
+    eyebrow: "Time per phase",
+    detail: "Each phase is sized by expected days, keeping the schedule concrete.",
     kind: "bar",
     data: movePhases.map((phase) => ({
       week: `F${phase.number}`,
@@ -492,17 +512,17 @@ const timelineVisuals: VisualSpec[] = [
     })),
   },
   {
-    id: "blocker-donut",
-    title: "Blocker mix",
-    eyebrow: "Risk source",
-    detail: "The current split of attention across external blockers.",
-    kind: "donut",
+    id: "blocker-lanes",
+    title: "Blocker timing lanes",
+    eyebrow: "When blockers hit",
+    detail: "Blockers are mapped to the weeks where they can slow the sequence.",
+    kind: "timeline",
     data: [
-      { name: "Access", value: 31, color: flour },
-      { name: "Contract", value: 25, color: blue },
-      { name: "Paint", value: 18, color: mint },
-      { name: "Mover", value: 16, color: rose },
-      { name: "Admin", value: 10, color: violet },
+      { name: "Access", start: 2, duration: 2, progress: 31 },
+      { name: "Contract", start: 0, duration: 2, progress: 25 },
+      { name: "Paint", start: 4, duration: 3, progress: 18 },
+      { name: "Mover", start: 5, duration: 3, progress: 16 },
+      { name: "Admin", start: 7, duration: 2, progress: 10 },
     ],
   },
   {
@@ -519,9 +539,9 @@ const timelineVisuals: VisualSpec[] = [
   },
   {
     id: "task-aging",
-    title: "Task aging profile",
-    eyebrow: "Aging work",
-    detail: "Old tasks are the ones most likely to become emotional drag.",
+    title: "Task aging by queue",
+    eyebrow: "Time in lane",
+    detail: "Aging work is grouped by how long it has been sitting in the sequence.",
     kind: "stacked",
     data: [
       { week: "0-2d", ready: 9, moving: 5, blocked: 1, planned: 3 },
@@ -553,11 +573,11 @@ const timelineVisuals: VisualSpec[] = [
     ],
   },
   {
-    id: "critical-scorecards",
-    title: "Critical path scorecards",
-    eyebrow: "Execution health",
-    detail: "Five fast checks for whether the road still holds.",
-    kind: "scorecards",
+    id: "critical-checkpoints",
+    title: "Critical path checkpoints",
+    eyebrow: "Execution gates",
+    detail: "Fast checks become a final ordered lane for the critical path.",
+    kind: "pipeline",
     data: [
       { name: "Access", value: 74 },
       { name: "Notice", value: 48 },
@@ -570,9 +590,9 @@ const timelineVisuals: VisualSpec[] = [
 const logisticsVisuals: VisualSpec[] = [
   {
     id: "packing-progress",
-    title: "Room-by-room packing",
-    eyebrow: "Execution",
-    detail: "Packing, fragile handling and setup readiness in one room grid.",
+    title: "Room packing sprint lanes",
+    eyebrow: "Pack order",
+    detail: "Rooms are staged as execution lanes across packing, fragile care and setup.",
     kind: "stacked",
     size: "wide",
     data: packingRooms.map((room) => ({
@@ -584,32 +604,31 @@ const logisticsVisuals: VisualSpec[] = [
     })),
   },
   {
-    id: "inventory-donut",
-    title: "Inventory state",
-    eyebrow: "Item flow",
-    detail: "What is packed, pending, donated, sold or still undecided.",
-    kind: "donut",
+    id: "inventory-flow",
+    title: "Inventory flow sequence",
+    eyebrow: "Item pipeline",
+    detail: "Inventory moves through ordered states from decide to packed.",
+    kind: "pipeline",
     data: [
-      { name: "Packed", value: 46, color: flour },
-      { name: "Pending", value: 26, color: blue },
-      { name: "Donate", value: 12, color: mint },
-      { name: "Sell", value: 9, color: amber },
-      { name: "Decide", value: 7, color: rose },
+      { name: "Decide", value: 72 },
+      { name: "Sort", value: 64 },
+      { name: "Donate", value: 48 },
+      { name: "Sell", value: 36 },
+      { name: "Packed", value: 46 },
     ],
   },
   {
     id: "vendor-score",
-    title: "Vendor readiness score",
+    title: "Vendor booking sequence",
     eyebrow: "Mover shortlist",
-    detail: "Balances availability, price, quality and confidence.",
-    kind: "radar",
+    detail: "Vendor selection is shown as timed steps from quotes to confirmation.",
+    kind: "timeline",
     data: [
-      { axis: "Price", score: 71 },
-      { axis: "Slots", score: 64 },
-      { axis: "Reviews", score: 82 },
-      { axis: "Insurance", score: 55 },
-      { axis: "Speed", score: 69 },
-      { axis: "Care", score: 76 },
+      { name: "Quotes", start: 2, duration: 2, progress: 71 },
+      { name: "Slots", start: 3, duration: 2, progress: 64 },
+      { name: "Review", start: 4, duration: 1, progress: 82 },
+      { name: "Book", start: 5, duration: 2, progress: 55 },
+      { name: "Confirm", start: 7, duration: 1, progress: 36 },
     ],
   },
   {
@@ -627,9 +646,9 @@ const logisticsVisuals: VisualSpec[] = [
   },
   {
     id: "truck-booking",
-    title: "Truck booking score",
-    eyebrow: "Day-of risk",
-    detail: "Booking confidence by week as vendor decisions firm up.",
+    title: "Truck booking ramp",
+    eyebrow: "Slot confidence",
+    detail: "Booking confidence rises by week as the vendor sequence clears.",
     kind: "line",
     data: weeks.map((week, index) => ({
       week,
@@ -639,9 +658,9 @@ const logisticsVisuals: VisualSpec[] = [
   },
   {
     id: "donation-pipeline",
-    title: "Donate / sell / throw pipeline",
-    eyebrow: "Declutter flow",
-    detail: "Turns decluttering into visible progress instead of hidden work.",
+    title: "Declutter sequence",
+    eyebrow: "Sort to dispose",
+    detail: "Decluttering is a timed pipeline, not a vague background task.",
     kind: "pipeline",
     size: "wide",
     data: [
@@ -654,9 +673,9 @@ const logisticsVisuals: VisualSpec[] = [
   },
   {
     id: "setup-readiness",
-    title: "Setup readiness curve",
-    eyebrow: "First night",
-    detail: "Tracks whether the first night will feel calm and functional.",
+    title: "First-night readiness ramp",
+    eyebrow: "Setup over time",
+    detail: "Setup readiness moves week by week toward a calm first night.",
     kind: "area",
     data: readinessTrend.map((point) => ({
       week: point.week,
@@ -666,18 +685,18 @@ const logisticsVisuals: VisualSpec[] = [
   },
   {
     id: "fragile-heatmap",
-    title: "Fragile item heatmap",
-    eyebrow: "Care load",
-    detail: "Fragile packing pressure across rooms and time windows.",
+    title: "Fragile care calendar",
+    eyebrow: "Time windows",
+    detail: "Fragile work is mapped to the windows where attention is most available.",
     kind: "heatmap",
     data: heatmapDays.map((point, index) => ({ ...point, value: (Number(point.value) + index * 7) % 100 })),
   },
   {
-    id: "execution-scorecards",
-    title: "Execution scorecards",
-    eyebrow: "Operational checks",
-    detail: "Fast signals for the tasks that determine move-day quality.",
-    kind: "scorecards",
+    id: "execution-checkpoints",
+    title: "Move-day checkpoint lane",
+    eyebrow: "Operational gates",
+    detail: "Execution checks are ordered as gates that must clear before move day.",
+    kind: "pipeline",
     data: [
       { name: "Packing", value: 58 },
       { name: "Movers", value: 62 },
@@ -687,9 +706,9 @@ const logisticsVisuals: VisualSpec[] = [
   },
   {
     id: "load-by-room",
-    title: "Load by room",
-    eyebrow: "Effort sizing",
-    detail: "Compares item volume across rooms so effort can be staged.",
+    title: "Room load sequence",
+    eyebrow: "Effort by stage",
+    detail: "Room load is sized so packing can be staged across the available weeks.",
     kind: "bar",
     data: packingRooms.map((room) => ({ week: room.name, value: room.packed + room.fragile })),
   },
@@ -706,46 +725,46 @@ const chartCategoriesByTab: Record<TabId, ChartCategory[]> = {
   overview: [
     {
       id: "overview-health",
-      eyebrow: "Health & momentum",
-      title: "Move health system",
-      description: "The high-level pulse: readiness, mission score, velocity and phase state.",
+      eyebrow: "Master sequence",
+      title: "The full move as a runway",
+      description: "A timeline-first overview of readiness, weekly load and phase state.",
       visualIds: ["move-health", "mission-score", "momentum-line", "phase-state"],
     },
     {
       id: "overview-risk",
-      eyebrow: "Risk & attention",
-      title: "Where focus should go next",
-      description: "Signals that show pressure points, energy load and the best windows for focused progress.",
-      visualIds: ["critical-radar", "weekly-focus", "risk-donut", "completion-heatmap"],
+      eyebrow: "Handoffs",
+      title: "Dependencies by when they matter",
+      description: "Risk is organized by timing, handoffs and work windows instead of generic categories.",
+      visualIds: ["critical-handoff", "weekly-focus", "risk-schedule", "completion-heatmap"],
     },
     {
       id: "overview-rewards",
-      eyebrow: "Gamified journey",
-      title: "Progress that feels earned",
-      description: "Badges and challenges that reward real move-risk reduction, not empty activity.",
+      eyebrow: "Unlock path",
+      title: "Progress that unlocks the next step",
+      description: "Gamified moments now sit on the timeline as useful sequence markers.",
       visualIds: ["achievement-rail", "challenge-board"],
     },
   ],
   budget: [
     {
       id: "budget-control",
-      eyebrow: "Spend control",
-      title: "Burn, allocation and guardrails",
-      description: "Core financial health for the move: cash curve, category mix, buffer and control scores.",
-      visualIds: ["budget-burn", "category-donut", "cash-buffer", "budget-scorecards"],
+      eyebrow: "Cash timeline",
+      title: "Money by due date",
+      description: "Budget views are arranged as a payment runway with weekly cash gates.",
+      visualIds: ["budget-burn", "cost-deadlines", "cash-buffer", "budget-checkpoints"],
     },
     {
       id: "budget-scenarios",
-      eyebrow: "Scenario planning",
-      title: "Sensitivity and decision tradeoffs",
-      description: "The charts that explain what changes when overlap, hidden costs or deposit recovery shift.",
+      eyebrow: "Scenario steps",
+      title: "Tradeoffs as timeline decisions",
+      description: "Overlap, hidden costs and deposit recovery are shown as timed decision paths.",
       visualIds: ["hidden-costs", "overlap-weeks", "deposit-recovery"],
     },
     {
       id: "budget-operations",
       eyebrow: "Payment operations",
-      title: "Quotes, utilities and cash events",
-      description: "Operational money moments that need decisions before they become stress.",
+      title: "Quotes, utilities and cash events in order",
+      description: "Every money action is connected to a calendar moment and a next step.",
       visualIds: ["utility-map", "quote-comparison", "payment-timeline"],
     },
   ],
@@ -768,17 +787,17 @@ const chartCategoriesByTab: Record<TabId, ChartCategory[]> = {
       id: "timeline-dependencies",
       eyebrow: "Dependencies",
       title: "Blockers, unlocks and execution gates",
-      description: "Dependency views that connect blockers, milestone unlocks and critical path scorecards.",
-      visualIds: ["dependency-radar", "blocker-donut", "unlock-pipeline", "critical-scorecards"],
+      description: "Dependency views that connect blockers, milestone unlocks and critical path checkpoints.",
+      visualIds: ["dependency-gates", "blocker-lanes", "unlock-pipeline", "critical-checkpoints"],
     },
   ],
   logistics: [
     {
       id: "logistics-packing",
       eyebrow: "Packing & inventory",
-      title: "Room-level execution",
-      description: "Everything related to boxes, fragile items, room load and inventory state.",
-      visualIds: ["packing-progress", "inventory-donut", "fragile-heatmap", "load-by-room"],
+      title: "Room-level sprint sequence",
+      description: "Packing is organized by timed room sprints, item flow and care windows.",
+      visualIds: ["packing-progress", "inventory-flow", "fragile-heatmap", "load-by-room"],
     },
     {
       id: "logistics-services",
@@ -792,7 +811,7 @@ const chartCategoriesByTab: Record<TabId, ChartCategory[]> = {
       eyebrow: "Execution readiness",
       title: "First-night and declutter pipeline",
       description: "The operational charts that make the final transition smoother and less cluttered.",
-      visualIds: ["donation-pipeline", "setup-readiness", "execution-scorecards"],
+      visualIds: ["donation-pipeline", "setup-readiness", "execution-checkpoints"],
     },
   ],
 };
@@ -1105,10 +1124,10 @@ function DashboardTab({ tab }: { tab: TabId }) {
               <div>
                 <div className="eyebrow text-[color:var(--flour)]">{tabMeta[tab].label}</div>
                 <h2 className="mt-1 text-3xl font-black tracking-[-0.04em] text-[color:var(--text-strong)]">
-                  {tab === "overview" && "Your move, scored like a living system."}
-                  {tab === "budget" && "Cash control without losing calm."}
+                  {tab === "overview" && "Your move, arranged as a cinematic sequence."}
+                  {tab === "budget" && "Every payment tied to a calendar gate."}
                   {tab === "timeline" && "Every dependency has a visible lane."}
-                  {tab === "logistics" && "Execution feels lighter when it is mapped."}
+                  {tab === "logistics" && "Execution becomes a sequence of calm handoffs."}
                 </h2>
               </div>
             </div>
@@ -1121,7 +1140,7 @@ function DashboardTab({ tab }: { tab: TabId }) {
           </div>
         </Card>
 
-        {tab === "timeline" ? <RoadmapGantt /> : <FeaturePanel tab={tab} />}
+        {tab === "timeline" ? <RoadmapGantt /> : <SequencePanel tab={tab} />}
       </AnimatedSection>
 
       <div className="flex flex-col gap-8">
@@ -1177,44 +1196,63 @@ function ChartCategorySection({
   );
 }
 
-function FeaturePanel({ tab }: { tab: TabId }) {
-  if (tab === "budget") {
-    return (
-      <Card className="premium-surface p-5">
-        <PanelHeader icon={Wallet2} eyebrow="Budget cockpit" title="The spend curve is under control, but overlap timing is the lever." />
-        <div className="mt-6 h-[280px]">
-          <BudgetChart />
-        </div>
-      </Card>
-    );
-  }
-
-  if (tab === "logistics") {
-    return (
-      <Card className="premium-surface p-5">
-        <PanelHeader icon={Boxes} eyebrow="Execution cockpit" title="Packing progress is healthy; utilities and fragile inventory need attention." />
-        <div className="mt-6 grid gap-3 sm:grid-cols-5">
-          {packingRooms.map((room) => (
-            <motion.div
-              key={room.name}
-              whileHover={{ y: -5 }}
-              className="rounded-[22px] border border-[color:var(--line)] bg-[color:var(--surface-raised)] p-4"
-            >
-              <div className="text-sm font-black text-[color:var(--text-strong)]">{room.name}</div>
-              <ProgressBar value={room.packed} className="mt-4 h-2" />
-              <div className="mt-3 text-xs font-bold text-[color:var(--muted)]">{room.packed}% packed</div>
-            </motion.div>
-          ))}
-        </div>
-      </Card>
-    );
-  }
+function SequencePanel({ tab }: { tab: TabId }) {
+  const panelCopy: Record<TabId, { eyebrow: string; title: string; icon: LucideIcon }> = {
+    overview: {
+      eyebrow: "Sequence map",
+      title: "The move reads left to right: decide, unlock access, prep the apartment, move in.",
+      icon: Route,
+    },
+    budget: {
+      eyebrow: "Payment map",
+      title: "Cash decisions are anchored to when they unblock the next move step.",
+      icon: Wallet2,
+    },
+    timeline: {
+      eyebrow: "Timeline map",
+      title: "Every phase has a lane, a start, a duration and a next dependency.",
+      icon: CalendarClock,
+    },
+    logistics: {
+      eyebrow: "Execution map",
+      title: "Packing, utilities, vendors and move day progress as one operational relay.",
+      icon: Boxes,
+    },
+  };
+  const copy = panelCopy[tab];
 
   return (
     <Card className="premium-surface p-5">
-      <PanelHeader icon={Gauge} eyebrow="Health cockpit" title="Readiness is rising; risk falls fastest once access and notice are sequenced." />
-      <div className="mt-6 h-[280px]">
-        <ReadinessChart />
+      <PanelHeader icon={copy.icon} eyebrow={copy.eyebrow} title={copy.title} />
+      <div className="sequence-strip mt-7">
+        {sequenceByTab[tab].map((step, index) => {
+          const Icon = step.icon;
+          return (
+            <motion.div
+              key={step.label}
+              initial={{ opacity: 0, x: -16 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              whileHover={{ y: -6 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: index * 0.08 }}
+              className="sequence-step"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="grid h-10 w-10 place-items-center rounded-[18px] bg-[rgba(255,138,31,.14)] text-[color:var(--flour)]">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div className="rounded-full border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-3 py-1 font-mono text-[10px] font-black uppercase tracking-[0.14em] text-[color:var(--muted)]">
+                  {step.week}
+                </div>
+              </div>
+              <div className="mt-4 text-lg font-black text-[color:var(--text-strong)]">{step.label}</div>
+              <ProgressBar value={step.progress} className="mt-4 h-2" delay={index * 0.05} />
+              {index < sequenceByTab[tab].length - 1 ? (
+                <div className="sequence-connector" />
+              ) : null}
+            </motion.div>
+          );
+        })}
       </div>
     </Card>
   );
@@ -1313,20 +1351,12 @@ function ChartRenderer({ visual }: { visual: VisualSpec }) {
       return <SimpleBar data={visual.data} />;
     case "stacked":
       return <StackedBars data={visual.data} />;
-    case "donut":
-      return <Donut data={visual.data} />;
-    case "radar":
-      return <RadarPulse data={visual.data} />;
-    case "radial":
-      return <RadialProgress data={visual.data} />;
     case "heatmap":
       return <Heatmap data={visual.data} />;
     case "waterfall":
       return <Waterfall data={visual.data} />;
     case "timeline":
       return <MiniTimeline data={visual.data} />;
-    case "scorecards":
-      return <Scorecards data={visual.data} />;
     case "pipeline":
       return <Pipeline data={visual.data} />;
     default:
@@ -1355,22 +1385,6 @@ function ReadinessChart({ data = readinessTrend }: { data?: VisualSpec["data"] }
         <Area type="monotone" dataKey="readiness" stroke={flour} fill="url(#readinessGradient)" strokeWidth={3} animationDuration={1100} />
         <Area type="monotone" dataKey="risk" stroke={blue} fill="url(#riskGradient)" strokeWidth={2} animationDuration={1300} />
       </AreaChart>
-    </ResponsiveContainer>
-  );
-}
-
-function BudgetChart() {
-  return (
-    <ResponsiveContainer width="100%" height="100%">
-      <ComposedChart data={budgetBurn} margin={{ left: -18, right: 12, top: 10 }}>
-        <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
-        <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fill: "var(--muted)", fontSize: 11, fontWeight: 700 }} />
-        <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--muted)", fontSize: 11 }} />
-        <Tooltip content={<ChartTooltip />} />
-        <Area dataKey="buffer" fill="rgba(73,199,162,.16)" stroke={mint} strokeWidth={2} animationDuration={1100} />
-        <Bar dataKey="planned" fill="rgba(99,120,255,.42)" radius={[10, 10, 4, 4]} animationDuration={900} />
-        <Line dataKey="actual" stroke={flour} strokeWidth={3} dot={false} animationDuration={1200} />
-      </ComposedChart>
     </ResponsiveContainer>
   );
 }
@@ -1423,51 +1437,6 @@ function StackedBars({ data }: { data: VisualSpec["data"] }) {
         <Bar dataKey="blocked" stackId="a" fill={rose} animationDuration={1150} />
         <Bar dataKey="planned" stackId="a" fill={blue} radius={[10, 10, 0, 0]} animationDuration={1300} />
       </BarChart>
-    </ResponsiveContainer>
-  );
-}
-
-function Donut({ data }: { data: VisualSpec["data"] }) {
-  return (
-    <ResponsiveContainer width="100%" height="100%">
-      <PieChart>
-        <Tooltip content={<ChartTooltip />} />
-        <Pie data={data} innerRadius="62%" outerRadius="88%" paddingAngle={4} dataKey="value" nameKey="name" animationDuration={1100}>
-          {data.map((entry, index) => (
-            <Cell key={index} fill={String(entry.color ?? [flour, blue, mint, amber, rose, violet][index % 6])} />
-          ))}
-        </Pie>
-      </PieChart>
-    </ResponsiveContainer>
-  );
-}
-
-function RadarPulse({ data }: { data: VisualSpec["data"] }) {
-  return (
-    <ResponsiveContainer width="100%" height="100%">
-      <RadarChart data={data} outerRadius="74%">
-        <PolarGrid stroke="var(--chart-grid)" />
-        <PolarAngleAxis dataKey="axis" tick={{ fill: "var(--muted)", fontSize: 11, fontWeight: 700 }} />
-        <PolarRadiusAxis angle={90} tick={false} axisLine={false} />
-        <Tooltip content={<ChartTooltip />} />
-        <Radar dataKey="score" stroke={flour} fill={flour} fillOpacity={0.28} strokeWidth={3} animationDuration={1200} />
-      </RadarChart>
-    </ResponsiveContainer>
-  );
-}
-
-function RadialProgress({ data }: { data: VisualSpec["data"] }) {
-  return (
-    <ResponsiveContainer width="100%" height="100%">
-      <RadialBarChart innerRadius="64%" outerRadius="92%" data={data} startAngle={90} endAngle={-270}>
-        <RadialBar dataKey="value" cornerRadius={18} fill={flour} background={{ fill: "var(--track)" }} animationDuration={1300} />
-        <text x="50%" y="47%" textAnchor="middle" dominantBaseline="middle" className="fill-[color:var(--text-strong)] text-4xl font-black">
-          {data[0]?.value}%
-        </text>
-        <text x="50%" y="61%" textAnchor="middle" dominantBaseline="middle" className="fill-[color:var(--muted)] text-xs font-bold uppercase tracking-[0.2em]">
-          complete
-        </text>
-      </RadialBarChart>
     </ResponsiveContainer>
   );
 }
@@ -1561,30 +1530,6 @@ function MiniTimeline({ data }: { data: VisualSpec["data"] }) {
           </div>
         );
       })}
-    </div>
-  );
-}
-
-function Scorecards({ data }: { data: VisualSpec["data"] }) {
-  return (
-    <div className="grid h-full content-center gap-3 sm:grid-cols-2">
-      {data.map((item, index) => (
-        <motion.div
-          key={String(item.name)}
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          whileHover={{ y: -4 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: index * 0.05 }}
-          className="rounded-[22px] border border-[color:var(--line)] bg-[color:var(--surface-raised)] p-4"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-black text-[color:var(--text-strong)]">{String(item.name)}</span>
-            <span className="text-xl font-black text-[color:var(--flour)]">{Number(item.value)}</span>
-          </div>
-          <ProgressBar value={Number(item.value)} className="mt-4 h-2" />
-        </motion.div>
-      ))}
     </div>
   );
 }
