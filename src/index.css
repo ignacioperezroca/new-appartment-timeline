@@ -194,12 +194,134 @@ body {
     background: linear-gradient(to right, rgba(255, 138, 31, 0.7), rgba(73, 199, 162, 0.32), transparent);
   }
 
+  .mobile-day-rail {
+    position: sticky;
+    top: 0.75rem;
+    z-index: 45;
+    border-radius: 24px;
+  }
+
+  .two-phase-shell {
+    overflow: visible;
+  }
+
+  .dual-track-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .phase-track-card {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 28px;
+    border: 1px solid var(--line);
+    background:
+      linear-gradient(135deg, rgba(255, 138, 31, 0.1), transparent 28%),
+      var(--surface-raised);
+    padding: 1rem;
+    box-shadow:
+      0 18px 50px -34px rgba(15, 23, 42, 0.38),
+      inset 0 1px 0 rgba(255, 255, 255, 0.26);
+    transition:
+      border-color 240ms ease,
+      box-shadow 240ms ease,
+      background 240ms ease;
+  }
+
+  .phase-track-card-active {
+    border-color: rgba(255, 138, 31, 0.45);
+    box-shadow:
+      0 26px 80px -44px rgba(255, 138, 31, 0.55),
+      0 18px 50px -34px rgba(15, 23, 42, 0.34),
+      inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  }
+
+  .phase-step-lane {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(168px, 1fr);
+    gap: 0.75rem;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    padding-bottom: 0.25rem;
+    scroll-snap-type: inline mandatory;
+  }
+
+  .phase-step {
+    min-height: 150px;
+    scroll-snap-align: start;
+    border-radius: 22px;
+    border: 1px solid var(--line);
+    background: var(--surface-soft);
+    padding: 0.9rem;
+  }
+
+  .handoff-bridge {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .handoff-node {
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface-raised);
+    padding: 0.75rem 1rem;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 900;
+    color: var(--text-strong);
+  }
+
+  .handoff-line {
+    position: relative;
+    height: 0.85rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--track);
+  }
+
+  .handoff-line::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(90deg, rgba(255, 138, 31, 0.78), rgba(73, 199, 162, 0.34), rgba(99, 120, 255, 0.26));
+    transform-origin: left;
+    animation: bridge-reveal 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .handoff-line span {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    height: 1.4rem;
+    width: 2px;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background: var(--flour);
+    box-shadow: 0 0 18px rgba(255, 138, 31, 0.7);
+  }
+
   .eyebrow {
     font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.22em;
     text-transform: uppercase;
+  }
+
+  @keyframes bridge-reveal {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
   }
 }
 
@@ -226,6 +348,29 @@ body {
 
   .sequence-strip {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .dual-track-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .phase-track-card {
+    padding: 1.25rem;
+  }
+
+  .phase-step-lane {
+    grid-auto-flow: row;
+    grid-auto-columns: unset;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow-x: visible;
+  }
+
+  .phase-step {
+    min-width: 0;
+  }
+
+  .handoff-bridge {
+    grid-template-columns: max-content minmax(120px, 1fr) max-content;
   }
 
   .sequence-connector {
