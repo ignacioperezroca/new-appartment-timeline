@@ -97,6 +97,9 @@ const blue = "#6378ff";
 const rose = "#ff6f7e";
 const violet = "#9568ff";
 const slate = "#64748b";
+const timelineTotalDays = 45;
+const currentTimelineDay = 5;
+const slotToDay = (slot: number) => Math.round((slot / 8) * timelineTotalDays);
 
 const tabMeta: Record<TabId, { label: string; icon: LucideIcon; summary: string }> = {
   overview: {
@@ -129,7 +132,7 @@ const statusMeta: Record<Status, { label: string; color: string; tone: string }>
   critical: { label: "Critical", color: amber, tone: "bg-amber-500" },
 };
 
-const weeks = ["Apr W3", "Apr W4", "May W1", "May W2", "May W3", "May W4", "Jun W1", "Jun W2", "Jun W3"];
+const weeks = ["Day 1", "Day 5", "Day 10", "Day 15", "Day 20", "Day 25", "Day 30", "Day 38", "Day 45"];
 
 const readinessTrend = weeks.map((week, index) => ({
   week,
@@ -189,36 +192,36 @@ const challenges = [
 const phaseCoordinates = movePhases.map((phase) => ({
   name: `F${phase.number}`,
   title: phase.shortTitle,
-  start: phase.startWeek,
-  duration: Math.max(1, phase.endWeek - phase.startWeek + 1),
+  start: slotToDay(phase.startWeek),
+  duration: Math.max(2, slotToDay(phase.endWeek) - slotToDay(phase.startWeek)),
   progress: phase.progress,
   status: phase.status,
 }));
 
 const sequenceByTab: Record<TabId, Array<{ label: string; week: string; progress: number; icon: LucideIcon }>> = {
   overview: [
-    { label: "Decide", week: "Apr W3", progress: 84, icon: Sparkles },
-    { label: "Keys", week: "May W1", progress: 64, icon: KeyRound },
-    { label: "Prep", week: "May W3", progress: 42, icon: PaintRoller },
-    { label: "Move", week: "Jun W1", progress: 18, icon: Truck },
+    { label: "Decide", week: "Day 1-7", progress: 84, icon: Sparkles },
+    { label: "Keys", week: "Day 8-14", progress: 64, icon: KeyRound },
+    { label: "Prep", week: "Day 15-30", progress: 42, icon: PaintRoller },
+    { label: "Move", week: "Day 31-45", progress: 18, icon: Truck },
   ],
   budget: [
-    { label: "Reserve", week: "Apr W4", progress: 100, icon: BadgeCheck },
-    { label: "Deposit", week: "May W1", progress: 72, icon: Wallet2 },
-    { label: "Vendors", week: "May W3", progress: 44, icon: ClipboardCheck },
-    { label: "Closeout", week: "Jun W2", progress: 18, icon: CheckCircle2 },
+    { label: "Reserve", week: "Day 1-5", progress: 100, icon: BadgeCheck },
+    { label: "Deposit", week: "Day 6-12", progress: 72, icon: Wallet2 },
+    { label: "Vendors", week: "Day 18-28", progress: 44, icon: ClipboardCheck },
+    { label: "Closeout", week: "Day 36-45", progress: 18, icon: CheckCircle2 },
   ],
   timeline: [
-    { label: "Contract", week: "Apr W4", progress: 78, icon: ClipboardCheck },
-    { label: "Access", week: "May W1", progress: 61, icon: KeyRound },
-    { label: "Packing", week: "May W4", progress: 48, icon: PackageCheck },
-    { label: "Handoff", week: "Jun W2", progress: 16, icon: Home },
+    { label: "Contract", week: "Day 1-7", progress: 78, icon: ClipboardCheck },
+    { label: "Access", week: "Day 8-14", progress: 61, icon: KeyRound },
+    { label: "Packing", week: "Day 22-35", progress: 48, icon: PackageCheck },
+    { label: "Handoff", week: "Day 38-45", progress: 16, icon: Home },
   ],
   logistics: [
-    { label: "Sort", week: "May W1", progress: 72, icon: Boxes },
-    { label: "Pack", week: "May W3", progress: 58, icon: PackageCheck },
-    { label: "Activate", week: "May W4", progress: 44, icon: Zap },
-    { label: "Move day", week: "Jun W1", progress: 20, icon: Truck },
+    { label: "Sort", week: "Day 8-16", progress: 72, icon: Boxes },
+    { label: "Pack", week: "Day 17-32", progress: 58, icon: PackageCheck },
+    { label: "Activate", week: "Day 28-38", progress: 44, icon: Zap },
+    { label: "Move day", week: "Day 39-45", progress: 20, icon: Truck },
   ],
 };
 
@@ -226,8 +229,8 @@ const overviewVisuals: VisualSpec[] = [
   {
     id: "move-health",
     title: "Master move runway",
-    eyebrow: "Apr to Jun sequence",
-    detail: "The main readiness line shows how each week pulls the move closer to handoff.",
+    eyebrow: "45-day sequence",
+    detail: "The main readiness line shows how each day marker pulls the move closer to handoff.",
     kind: "area",
     size: "wide",
     data: readinessTrend,
@@ -255,19 +258,19 @@ const overviewVisuals: VisualSpec[] = [
     kind: "timeline",
     size: "wide",
     data: [
-      { name: "Decision", start: 0, duration: 2, progress: 84 },
-      { name: "Keys", start: 2, duration: 2, progress: 64 },
-      { name: "Notice", start: 3, duration: 2, progress: 38 },
-      { name: "Paint", start: 4, duration: 3, progress: 24 },
-      { name: "Move day", start: 6, duration: 2, progress: 12 },
+      { name: "Decision", start: 1, duration: 6, progress: 84 },
+      { name: "Keys", start: 8, duration: 7, progress: 64 },
+      { name: "Notice", start: 12, duration: 6, progress: 38 },
+      { name: "Paint", start: 18, duration: 12, progress: 24 },
+      { name: "Move day", start: 36, duration: 8, progress: 12 },
     ],
     metric: "5 gates",
   },
   {
     id: "weekly-focus",
     title: "Weekly step load",
-    eyebrow: "Work by week",
-    detail: "Each bar is a week in the sequence, showing where the plan gets operationally dense.",
+    eyebrow: "Work by day marker",
+    detail: "Each bar is a day marker in the sequence, showing where the plan gets operationally dense.",
     kind: "bar",
     data: weeks.map((week, index) => ({ week, value: [28, 46, 62, 74, 83, 77, 58, 44, 31][index] })),
   },
@@ -287,10 +290,10 @@ const overviewVisuals: VisualSpec[] = [
     detail: "Risk is organized by when it can interrupt the sequence, not by abstract category.",
     kind: "timeline",
     data: [
-      { name: "Contract", start: 0, duration: 2, progress: 68 },
-      { name: "Access", start: 2, duration: 2, progress: 52 },
-      { name: "Logistics", start: 4, duration: 3, progress: 38 },
-      { name: "Closeout", start: 7, duration: 2, progress: 18 },
+      { name: "Contract", start: 1, duration: 8, progress: 68 },
+      { name: "Access", start: 9, duration: 7, progress: 52 },
+      { name: "Logistics", start: 20, duration: 14, progress: 38 },
+      { name: "Closeout", start: 36, duration: 9, progress: 18 },
     ],
   },
   {
@@ -341,7 +344,7 @@ const budgetVisuals: VisualSpec[] = [
     id: "budget-burn",
     title: "Cash runway over time",
     eyebrow: "Weekly spend sequence",
-    detail: "Spend is plotted by week so the budget reads like a cash timeline.",
+    detail: "Spend is plotted by day marker so the budget reads like a cash timeline.",
     kind: "area",
     size: "wide",
     data: budgetBurn,
@@ -355,8 +358,8 @@ const budgetVisuals: VisualSpec[] = [
     kind: "timeline",
     data: costCategories.map((item, index) => ({
       name: item.name,
-      start: Math.min(index + 1, 8),
-      duration: index > 2 ? 2 : 1,
+      start: [1, 8, 18, 24, 30, 36][index] ?? Math.min(index * 6 + 1, 44),
+      duration: index > 2 ? 8 : 5,
       progress: Math.max(18, 92 - index * 12),
     })),
   },
@@ -377,9 +380,9 @@ const budgetVisuals: VisualSpec[] = [
   },
   {
     id: "overlap-weeks",
-    title: "Overlap week ladder",
+    title: "Overlap day ladder",
     eyebrow: "Scenario by duration",
-    detail: "The cost rises step by step as each extra overlap week is added.",
+    detail: "The cost rises step by step as each extra overlap block is added.",
     kind: "waterfall",
     data: [
       { name: "Base", value: 4100 },
@@ -419,7 +422,7 @@ const budgetVisuals: VisualSpec[] = [
   {
     id: "cash-buffer",
     title: "Buffer runway curve",
-    eyebrow: "Slack over weeks",
+    eyebrow: "Slack over days",
     detail: "The buffer is tracked as time slack and cash slack through the sequence.",
     kind: "area",
     data: budgetBurn.map((point) => ({ week: point.week, readiness: point.buffer, risk: point.actual / 12 })),
@@ -444,11 +447,11 @@ const budgetVisuals: VisualSpec[] = [
     kind: "timeline",
     size: "wide",
     data: [
-      { name: "Reserve", start: 0, duration: 1, progress: 100 },
-      { name: "Deposit", start: 2, duration: 2, progress: 72 },
-      { name: "Paint", start: 4, duration: 2, progress: 34 },
-      { name: "Movers", start: 6, duration: 1, progress: 20 },
-      { name: "Closeout", start: 8, duration: 1, progress: 10 },
+      { name: "Reserve", start: 1, duration: 5, progress: 100 },
+      { name: "Deposit", start: 6, duration: 7, progress: 72 },
+      { name: "Paint", start: 18, duration: 8, progress: 34 },
+      { name: "Movers", start: 28, duration: 6, progress: 20 },
+      { name: "Closeout", start: 38, duration: 7, progress: 10 },
     ],
   },
   {
@@ -480,8 +483,8 @@ const timelineVisuals: VisualSpec[] = [
   {
     id: "readiness-trend",
     title: "Readiness ramp",
-    eyebrow: "Week-by-week",
-    detail: "Preparedness is shown as a weekly ramp toward move-in.",
+    eyebrow: "Day-by-day",
+    detail: "Preparedness is shown as a day-marker ramp toward move-in.",
     kind: "line",
     data: readinessTrend,
   },
@@ -515,21 +518,21 @@ const timelineVisuals: VisualSpec[] = [
     id: "blocker-lanes",
     title: "Blocker timing lanes",
     eyebrow: "When blockers hit",
-    detail: "Blockers are mapped to the weeks where they can slow the sequence.",
+    detail: "Blockers are mapped to the day ranges where they can slow the sequence.",
     kind: "timeline",
     data: [
-      { name: "Access", start: 2, duration: 2, progress: 31 },
-      { name: "Contract", start: 0, duration: 2, progress: 25 },
-      { name: "Paint", start: 4, duration: 3, progress: 18 },
-      { name: "Mover", start: 5, duration: 3, progress: 16 },
-      { name: "Admin", start: 7, duration: 2, progress: 10 },
+      { name: "Access", start: 8, duration: 7, progress: 31 },
+      { name: "Contract", start: 1, duration: 8, progress: 25 },
+      { name: "Paint", start: 18, duration: 12, progress: 18 },
+      { name: "Mover", start: 24, duration: 10, progress: 16 },
+      { name: "Admin", start: 35, duration: 10, progress: 10 },
     ],
   },
   {
     id: "buffer-burn",
     title: "Time buffer burn",
     eyebrow: "Slack",
-    detail: "Protects the plan from losing calm in the last two weeks.",
+    detail: "Protects the plan from losing calm in the final 15 days.",
     kind: "area",
     data: weeks.map((week, index) => ({
       week,
@@ -624,11 +627,11 @@ const logisticsVisuals: VisualSpec[] = [
     detail: "Vendor selection is shown as timed steps from quotes to confirmation.",
     kind: "timeline",
     data: [
-      { name: "Quotes", start: 2, duration: 2, progress: 71 },
-      { name: "Slots", start: 3, duration: 2, progress: 64 },
-      { name: "Review", start: 4, duration: 1, progress: 82 },
-      { name: "Book", start: 5, duration: 2, progress: 55 },
-      { name: "Confirm", start: 7, duration: 1, progress: 36 },
+      { name: "Quotes", start: 12, duration: 7, progress: 71 },
+      { name: "Slots", start: 18, duration: 7, progress: 64 },
+      { name: "Review", start: 23, duration: 5, progress: 82 },
+      { name: "Book", start: 28, duration: 8, progress: 55 },
+      { name: "Confirm", start: 38, duration: 6, progress: 36 },
     ],
   },
   {
@@ -638,17 +641,17 @@ const logisticsVisuals: VisualSpec[] = [
     detail: "Activation status for internet, power, gas and admin services.",
     kind: "timeline",
     data: [
-      { name: "Internet", start: 3, duration: 3, progress: 42 },
-      { name: "Power", start: 2, duration: 2, progress: 64 },
-      { name: "Gas", start: 4, duration: 2, progress: 28 },
-      { name: "Locks", start: 5, duration: 1, progress: 18 },
+      { name: "Internet", start: 20, duration: 12, progress: 42 },
+      { name: "Power", start: 12, duration: 10, progress: 64 },
+      { name: "Gas", start: 24, duration: 8, progress: 28 },
+      { name: "Locks", start: 34, duration: 5, progress: 18 },
     ],
   },
   {
     id: "truck-booking",
     title: "Truck booking ramp",
     eyebrow: "Slot confidence",
-    detail: "Booking confidence rises by week as the vendor sequence clears.",
+    detail: "Booking confidence rises by day marker as the vendor sequence clears.",
     kind: "line",
     data: weeks.map((week, index) => ({
       week,
@@ -675,7 +678,7 @@ const logisticsVisuals: VisualSpec[] = [
     id: "setup-readiness",
     title: "First-night readiness ramp",
     eyebrow: "Setup over time",
-    detail: "Setup readiness moves week by week toward a calm first night.",
+    detail: "Setup readiness moves day marker by day marker toward a calm first night.",
     kind: "area",
     data: readinessTrend.map((point) => ({
       week: point.week,
@@ -708,7 +711,7 @@ const logisticsVisuals: VisualSpec[] = [
     id: "load-by-room",
     title: "Room load sequence",
     eyebrow: "Effort by stage",
-    detail: "Room load is sized so packing can be staged across the available weeks.",
+    detail: "Room load is sized so packing can be staged across the 45-day runway.",
     kind: "bar",
     data: packingRooms.map((room) => ({ week: room.name, value: room.packed + room.fragile })),
   },
@@ -727,7 +730,7 @@ const chartCategoriesByTab: Record<TabId, ChartCategory[]> = {
       id: "overview-health",
       eyebrow: "Master sequence",
       title: "The full move as a runway",
-      description: "A timeline-first overview of readiness, weekly load and phase state.",
+      description: "A timeline-first overview of readiness, day-marker load and phase state.",
       visualIds: ["move-health", "mission-score", "momentum-line", "phase-state"],
     },
     {
@@ -750,7 +753,7 @@ const chartCategoriesByTab: Record<TabId, ChartCategory[]> = {
       id: "budget-control",
       eyebrow: "Cash timeline",
       title: "Money by due date",
-      description: "Budget views are arranged as a payment runway with weekly cash gates.",
+      description: "Budget views are arranged as a payment runway with day-based cash gates.",
       visualIds: ["budget-burn", "cost-deadlines", "cash-buffer", "budget-checkpoints"],
     },
     {
@@ -903,7 +906,7 @@ function PremiumHero({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: ()
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <Badge className="border-[rgba(255,138,31,.25)] bg-[rgba(255,138,31,.14)] text-[color:var(--flour)]">
-              Mission control · {todayLabel}
+              Mission control · {todayLabel} of 45
             </Badge>
             <Badge className="border-[color:var(--line)] bg-[color:var(--surface-soft)] text-[color:var(--muted)]">
               Target {targetDate}
@@ -1263,15 +1266,17 @@ function RoadmapGantt() {
     <Card className="premium-surface overflow-hidden p-5">
       <PanelHeader icon={Route} eyebrow="Roadmap / Gantt" title="The critical path runs through decision, keys, notice, painting and packing." />
       <div className="mt-6 space-y-4">
-        <div className="grid grid-cols-9 gap-1 pl-20 text-center font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--muted)]">
+          <div className="grid grid-cols-9 gap-1 pl-20 text-center font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--muted)]">
           {weeks.map((week) => (
-            <span key={week}>{week.replace(" ", "\n")}</span>
+            <span key={week} className={week === "Day 5" ? "text-[color:var(--flour)]" : undefined}>{week}</span>
           ))}
         </div>
         <div className="space-y-3">
           {movePhases.map((phase, index) => {
-            const left = `${(phase.startWeek / 9) * 100}%`;
-            const width = `${(Math.max(1, phase.endWeek - phase.startWeek + 1) / 9) * 100}%`;
+            const startDay = slotToDay(phase.startWeek);
+            const endDay = slotToDay(phase.endWeek);
+            const left = `${(startDay / timelineTotalDays) * 100}%`;
+            const width = `${(Math.max(2, endDay - startDay) / timelineTotalDays) * 100}%`;
             const isCritical = phase.status === "critical" || phase.status === "blocked" || phase.risk === "high";
             return (
               <motion.div
@@ -1300,6 +1305,10 @@ function RoadmapGantt() {
                       <span>{phase.progress}%</span>
                     </div>
                   </motion.div>
+                  <div
+                    className="absolute inset-y-0 w-px bg-[color:var(--flour)] shadow-[0_0_18px_rgba(255,138,31,.55)]"
+                    style={{ left: `${(currentTimelineDay / timelineTotalDays) * 100}%` }}
+                  />
                   <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,transparent_0,transparent_calc(11.11%-1px),rgba(148,163,184,.16)_calc(11.11%-1px),rgba(148,163,184,.16)_11.11%)] bg-[length:11.11%_100%]" />
                 </div>
               </motion.div>
@@ -1511,8 +1520,8 @@ function MiniTimeline({ data }: { data: VisualSpec["data"] }) {
   return (
     <div className="flex h-full flex-col justify-center gap-3">
       {data.map((item, index) => {
-        const left = `${(Number(item.start ?? 0) / 9) * 100}%`;
-        const width = `${(Number(item.duration ?? 1) / 9) * 100}%`;
+        const left = `${(Number(item.start ?? 0) / timelineTotalDays) * 100}%`;
+        const width = `${(Number(item.duration ?? 1) / timelineTotalDays) * 100}%`;
         return (
           <div key={String(item.name ?? item.title)} className="grid grid-cols-[72px_1fr] items-center gap-3">
             <div className="truncate text-xs font-black text-[color:var(--muted)]">{String(item.name ?? item.title)}</div>
@@ -1525,6 +1534,10 @@ function MiniTimeline({ data }: { data: VisualSpec["data"] }) {
                 transition={{ duration: 0.75, delay: index * 0.05 }}
                 className="absolute inset-y-1 origin-left rounded-full bg-gradient-to-r from-[color:var(--flour)] to-[rgba(73,199,162,.92)]"
                 style={{ left, width }}
+              />
+              <div
+                className="absolute inset-y-0 w-px bg-[color:var(--flour)] shadow-[0_0_14px_rgba(255,138,31,.5)]"
+                style={{ left: `${(currentTimelineDay / timelineTotalDays) * 100}%` }}
               />
             </div>
           </div>

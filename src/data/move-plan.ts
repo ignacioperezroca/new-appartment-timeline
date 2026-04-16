@@ -78,14 +78,14 @@ export interface CriticalDependency {
   impact: string;
 }
 
-export const todayLabel = "15 abril";
-export const targetDate = "Junio 2026";
-export const overallProgress = 22;
+export const todayLabel = "Day 5";
+export const targetDate = "Day 45";
+export const overallProgress = 11;
 
 export const executiveSummary = {
   activePhase: "Fase 1 en curso",
   nextMilestone: "Firma + acceso al depto",
-  overlapWindow: "Solapamiento ideal de 2–3 semanas",
+  overlapWindow: "Solapamiento ideal de 10–15 días",
   recommendation:
     "Firmar, asegurar acceso y recién después avisar la salida actual para sostener margen operativo y bajar estrés.",
 };
@@ -93,7 +93,7 @@ export const executiveSummary = {
 export const overviewHighlights = [
   { label: "Estado actual", value: "Estrategia recomendada lista" },
   { label: "Foco operativo", value: "Bloquear entrada antes de pintar" },
-  { label: "Ventana crítica", value: "Mayo semanas 2–4" },
+  { label: "Ventana crítica", value: "Días 16–30" },
 ];
 
 export const kpiMetrics: Metric[] = [
@@ -118,8 +118,8 @@ export const kpiMetrics: Metric[] = [
   {
     id: "process",
     label: "Tiempo total proceso",
-    value: "4 a 8 semanas",
-    note: "Incluye solapamiento y cierre",
+    value: "45 días",
+    note: "Timeline total de punta a punta",
     icon: "timer",
     emphasis: "primary",
     marker: "Ruta completa",
@@ -145,7 +145,7 @@ export const kpiMetrics: Metric[] = [
   {
     id: "target",
     label: "Fecha objetivo",
-    value: "Junio 2026",
+    value: "Día 45",
     note: "Instalado y con cierre resuelto",
     icon: "calendar",
     emphasis: "primary",
